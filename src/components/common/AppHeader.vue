@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import { SidebarTrigger } from '../ui/sidebar'
+const path = useRouter().currentRoute.value.path
 </script>
 
 <template>

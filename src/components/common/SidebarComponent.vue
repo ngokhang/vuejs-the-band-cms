@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LayoutDashboard, Users, CalendarDays, Image, Settings, LogOut } from 'lucide-vue-next'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +41,12 @@ const mainMenuItems = [
     to: { path: '/settings' },
   },
 ]
+
+const router = useRouter()
+
+const handleClick = (path: string) => {
+  router.push(path)
+}
 </script>
 
 <template>
@@ -71,10 +77,10 @@ const mainMenuItems = [
               class="flex justify-center"
             >
               <SidebarMenuButton
-                :as="RouterLink"
-                :to="item.to.path"
+                as="button"
                 :tooltip="item.label"
                 class="cursor-pointer"
+                @click="() => handleClick(item.to.path)"
               >
                 <component :is="item.icon" class="text-sidebar-foreground/80" />
                 <span class="group-data-[collapsible=icon]:hidden">

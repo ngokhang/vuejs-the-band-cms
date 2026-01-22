@@ -37,6 +37,12 @@ const routes: RouteRecordRaw[] = [
     name: 'test',
     component: () => import('../views/TestView.vue'),
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('../views/errors/404.vue'),
+    meta: { layout: 'ErrorLayout' },
+  },
 ]
 
 const router = createRouter({

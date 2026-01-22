@@ -1,13 +1,14 @@
 <script setup>
-import { useRoute } from "vue-router";
-import AppLayout from "./layouts/AppLayout.vue";
-import AuthLayout from "./layouts/AuthLayout.vue";
-import { computed } from "vue";
-import { Toaster } from "vue-sonner";
+import { useRoute } from 'vue-router'
+import AppLayout from './layouts/AppLayout.vue'
+import AuthLayout from './layouts/AuthLayout.vue'
+import { computed } from 'vue'
+import { Toaster } from 'vue-sonner'
+import ErrorLayout from './layouts/ErrorLayout.vue'
 
-const route = useRoute();
-const layouts = { AppLayout, AuthLayout };
-const LayoutComponent = computed(() => layouts[route.meta.layout] || AppLayout);
+const route = useRoute()
+const layouts = { AppLayout, AuthLayout, ErrorLayout }
+const LayoutComponent = computed(() => layouts[route.meta.layout] || AppLayout)
 </script>
 
 <template>

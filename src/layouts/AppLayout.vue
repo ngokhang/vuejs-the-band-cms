@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import AppHeader from '@/components/common/AppHeader.vue'
+import BreadcrumbsComponent from '@/components/common/BreadcrumbsComponent.vue'
 import SidebarComponent from '@/components/common/SidebarComponent.vue'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 </script>
 
@@ -12,6 +21,8 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
       <AppHeader />
 
       <main class="flex-1 p-4">
+        <BreadcrumbsComponent class="pb-2" />
+
         <slot />
       </main>
     </SidebarInset>
