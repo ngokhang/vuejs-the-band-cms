@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import FlexRender from '@/components/ui/FlexRender.vue'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -7,13 +6,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
 import type { SortingState } from '@tanstack/vue-table'
 import {
   createColumnHelper,
@@ -26,6 +18,11 @@ import {
 import { MoreHorizontal, Phone, UserPlus, Users } from 'lucide-vue-next'
 import { computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import DataTable from '@/components/common/DataTable.vue'
+import MemberFilter from '@/views/members/_components/MemberFilter.vue'
+import MemberStats from '@/views/members/_components/MemberStats.vue'
+import MemberTableEmptyState from '@/views/members/_components/MemberTableEmptyState.vue'
+import MemberTablePagination from '@/views/members/_components/MemberTablePagination.vue'
 
 const router = useRouter()
 
@@ -81,10 +78,74 @@ const members = ref<Member[]>([
     status: 'active',
     totalSpent: 3000,
   },
+  {
+    id: '5',
+    name: 'Hoàng Thị Em',
+    email: 'hoangthiem@email.com',
+    phone: '0956789012',
+    role: 'vip',
+    joinDate: '2023-02-28',
+    status: 'active',
+    totalSpent: 18000,
+  },
+  {
+    id: '6',
+    name: 'Vũ Đức Phong',
+    email: 'vuducphong@email.com',
+    phone: '0967890123',
+    role: 'member',
+    joinDate: '2023-06-15',
+    status: 'inactive',
+    totalSpent: 1000,
+  },
+  {
+    id: '7',
+    name: 'Đỗ Thị Giang',
+    email: 'dothigiang@email.com',
+    phone: '0978901234',
+    role: 'member',
+    joinDate: '2023-04-10',
+    status: 'active',
+    totalSpent: 4500,
+  },
+  {
+    id: '8',
+    name: 'Bùi Văn Hải',
+    email: 'buivanhai@email.com',
+    phone: '0989012345',
+    role: 'vip',
+    joinDate: '2023-01-20',
+    status: 'active',
+    totalSpent: 22000,
+  },
+  {
+    id: '9',
+    name: 'Ngô Thị Lan',
+    email: 'ngothilan@email.com',
+    phone: '0990123456',
+    role: 'member',
+    joinDate: '2023-07-08',
+    status: 'active',
+    totalSpent: 6000,
+  },
+  {
+    id: '10',
+    name: 'Trịnh Văn Khoa',
+    email: 'trinhvankhoa@email.com',
+    phone: '0901234567',
+    role: 'member',
+    joinDate: '2023-08-12',
+    status: 'inactive',
+    totalSpent: 500,
+  },
 ])
 
 const sorting = ref<SortingState>([])
 const globalFilter = ref('')
+const pagination = ref({
+  pageIndex: 0,
+  pageSize: 5,
+})
 
 const columnHelper = createColumnHelper<Member>()
 
@@ -211,6 +272,9 @@ const table = useVueTable({
     get globalFilter() {
       return globalFilter.value
     },
+    get pagination() {
+      return pagination.value
+    },
   },
   onSortingChange: updaterOrValue => {
     sorting.value =
@@ -218,6 +282,9 @@ const table = useVueTable({
   },
   onGlobalFilterChange: updater => {
     globalFilter.value = typeof updater === 'function' ? updater(globalFilter.value) : updater
+  },
+  onPaginationChange: updater => {
+    pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater
   },
   getCoreRowModel: getCoreRowModel(),
   getSortedRowModel: getSortedRowModel(),
@@ -261,114 +328,24 @@ const vipMembers = computed(() => members.value.filter(m => m.role === 'vip').le
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div class="rounded-lg bg-blue-50 p-4">
-        <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500">
-            <Users class="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-600">Tổng thành viên</p>
-            <p class="text-2xl font-bold text-blue-600">{{ totalMembers }}</p>
-          </div>
-        </div>
-      </div>
+    <MemberStats :total-members="totalMembers" :active-members="activeMembers" />
 
-      <div class="rounded-lg bg-green-50 p-4">
-        <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500">
-            <Users class="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-600">Đang hoạt động</p>
-            <p class="text-2xl font-bold text-green-600">{{ activeMembers }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Filter -->
+    <MemberFilter v-model="globalFilter" />
 
     <!-- Table -->
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-gray-200 bg-gray-50">
-              <th
-                v-for="header in table.getHeaderGroups()[0]?.headers || []"
-                :key="header.id"
-                class="px-6 py-4 text-left"
-              >
-                <FlexRender
-                  v-if="!header.isPlaceholder"
-                  :render="header.column.columnDef.header"
-                  :props="header.getContext()"
-                />
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200">
-            <tr
-              v-for="row in filteredRows"
-              :key="row.id"
-              class="transition-colors hover:bg-gray-50"
-            >
-              <td v-for="cell in row.getVisibleCells()" :key="cell.id" class="px-6 py-4">
-                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Empty State -->
-      <div
-        v-if="filteredRows.length === 0"
-        class="flex flex-col items-center justify-center px-6 py-12"
-      >
-        <Users class="mb-3 h-12 w-12 text-gray-300" />
-        <p class="text-gray-500">Không tìm thấy thành viên nào</p>
-      </div>
-
-      <!-- Pagination -->
-      <div class="border-t border-gray-200 bg-gray-50 px-6 py-4">
-        <div class="space-y-4">
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <!-- <div class="text-sm whitespace-nowrap text-gray-600">
-              Hiển thị {{ filteredRows.length > 0 ? (currentPage - 1) * 5 + 1 : 0 }} -
-              {{ Math.min(currentPage * 5, table.getFilteredRowModel().rows.length) }}
-              trên tổng số {{ table.getFilteredRowModel().rows.length }} thành viên
-            </div> -->
-
-            <Pagination
-              v-if="pageCount > 1"
-              :total="table.getFilteredRowModel().rows.length"
-              :items-per-page="5"
-              :sibling-count="1"
-              :default-page="1"
-              :page="currentPage"
-            >
-              <PaginationContent v-slot="{ items }">
-                <PaginationPrevious />
-                <template
-                  v-for="(item, index) in items"
-                  :key="index"
-                  :data-pagination-value="item.value"
-                >
-                  <PaginationItem
-                    v-if="item.type === 'page'"
-                    :value="item.value"
-                    :is-active="item.value === currentPage"
-                  >
-                    {{ item.value }}
-                  </PaginationItem>
-                </template>
-                <!-- <PaginationEllipsis :index="4" /> -->
-                <PaginationNext />
-              </PaginationContent>
-            </Pagination>
-          </div>
-        </div>
-      </div>
-    </div>
+    <DataTable :table="table">
+      <template #emptyState>
+        <MemberTableEmptyState :is-empty="filteredRows.length === 0" />
+      </template>
+      <template #pagination>
+        <MemberTablePagination
+          :page-count="pageCount"
+          :current-page="currentPage"
+          :total="table.getFilteredRowModel().rows.length"
+          @update:page="(page: number) => table.setPageIndex(page - 1)"
+        />
+      </template>
+    </DataTable>
   </div>
 </template>
