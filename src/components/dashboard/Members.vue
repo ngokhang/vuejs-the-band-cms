@@ -131,7 +131,7 @@ const pagination = ref({
 })
 
 const handleEdit = (member: Member) => {
-  console.log('Chỉnh sửa thành viên', member)
+  router.push({ name: 'members-edit', params: { id: member.id } })
 }
 
 const handleDelete = (member: Member) => {

@@ -21,7 +21,7 @@ export const createMemberSchema = toTypedSchema(
         file => !file || ['image/jpeg', 'image/png', 'image/webp'].includes(file?.type),
         'Chỉ chấp nhận định dạng .jpg, .png, .webp'
       ),
-    systemRoles: z.array(z.string()).min(1, { message: 'Chọn ít nhất 1 vai trò hệ thống' }),
+    userRoles: z.array(z.string()).min(1, { message: 'Chọn ít nhất 1 vai trò hệ thống' }),
     bandRoles: z.array(z.string()).min(1, { message: 'Chọn ít nhất 1 vai trò ban nhạc' }),
   })
 )
