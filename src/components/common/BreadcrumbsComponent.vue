@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Breadcrumb,
@@ -8,50 +9,42 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '../ui/breadcrumb'
-import { computed } from 'vue'
+import { BREADCRUMB_ROUTES, type AppRouteName } from '@/types/constants'
 
 interface Props {
   class?: string
 }
 
-const PATH_NAME_MAP: Record<string, string> = {
-  '/': 'Trang chủ',
-  '/settings': 'Cài đặt',
-  '/members': 'Thành viên',
-  '/schedule': 'Lịch trình',
-}
-
 const props = defineProps<Props>()
 const router = useRouter()
-const path = computed(() => router.currentRoute.value.path)
-const segments = computed(() => path.value.split('/').filter(Boolean))
+
+const currentRoute = computed(() => router.currentRoute.value)
+
+const currentBreadcrumb = computed(() => {
+  const name = currentRoute.value.name as AppRouteName | undefined
+  if (!name || name === 'home') return null
+  return BREADCRUMB_ROUTES[name] ?? null
+})
 </script>
 
 <template>
   <Breadcrumb :class="props.class">
     <BreadcrumbList>
       <BreadcrumbItem>
-        <BreadcrumbLink to="/">
-          <BreadcrumbPage class="font-semibold">Trang chủ</BreadcrumbPage>
-        </BreadcrumbLink>
-        <BreadcrumbSeparator v-show="path !== '/'" />
-      </BreadcrumbItem>
-
-      <BreadcrumbItem v-if="path !== '/'">
-        <BreadcrumbLink :to="path">
+        <BreadcrumbLink :to="BREADCRUMB_ROUTES.home.path">
           <BreadcrumbPage class="font-semibold">
-            {{ PATH_NAME_MAP[path] || 'Không xác định' }}
+            {{ BREADCRUMB_ROUTES.home.label }}
           </BreadcrumbPage>
         </BreadcrumbLink>
+        <BreadcrumbSeparator v-if="currentBreadcrumb" />
       </BreadcrumbItem>
 
-      <BreadcrumbItem v-else-if="segments.length >= 2" v-for="segment in segments" :key="segment">
-        <BreadcrumbLink :to="`/${segment}`">
+      <BreadcrumbItem v-if="currentBreadcrumb">
+        <BreadcrumbLink :to="currentBreadcrumb.path">
           <BreadcrumbPage class="font-semibold">
-            {{ PATH_NAME_MAP[`/${segment}`] || 'Không xác định' }}
+            {{ currentBreadcrumb.label }}
           </BreadcrumbPage>
         </BreadcrumbLink>
-        <BreadcrumbSeparator v-if="segment !== segments[segments.length - 1]" />
       </BreadcrumbItem>
     </BreadcrumbList>
   </Breadcrumb>

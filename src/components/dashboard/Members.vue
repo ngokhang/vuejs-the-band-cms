@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  useVueTable,
-  getSortedRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-} from '@tanstack/vue-table'
-import { Users, Mail, Phone, Search, UserPlus, MoreHorizontal, Edit, Trash2 } from 'lucide-vue-next'
 import FlexRender from '@/components/ui/FlexRender.vue'
-import type { SortingState } from '@tanstack/vue-table'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Pagination,
   PaginationContent,
@@ -18,7 +14,20 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { Button } from '@/components/ui/button'
+import type { SortingState } from '@tanstack/vue-table'
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useVueTable,
+} from '@tanstack/vue-table'
+import { MoreHorizontal, Phone, UserPlus, Users } from 'lucide-vue-next'
+import { computed, h, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 interface Member {
   id: string
@@ -71,66 +80,6 @@ const members = ref<Member[]>([
     joinDate: '2023-05-05',
     status: 'active',
     totalSpent: 3000,
-  },
-  {
-    id: '5',
-    name: 'Hoàng Thị Em',
-    email: 'hoangthiem@email.com',
-    phone: '0956789012',
-    role: 'vip',
-    joinDate: '2023-02-28',
-    status: 'active',
-    totalSpent: 18000,
-  },
-  {
-    id: '6',
-    name: 'Vũ Đức Phong',
-    email: 'vuducphong@email.com',
-    phone: '0967890123',
-    role: 'member',
-    joinDate: '2023-06-15',
-    status: 'inactive',
-    totalSpent: 1000,
-  },
-  {
-    id: '7',
-    name: 'Đỗ Thị Giang',
-    email: 'dothigiang@email.com',
-    phone: '0978901234',
-    role: 'member',
-    joinDate: '2023-04-10',
-    status: 'active',
-    totalSpent: 4500,
-  },
-  {
-    id: '8',
-    name: 'Bùi Văn Hải',
-    email: 'buivanhai@email.com',
-    phone: '0989012345',
-    role: 'vip',
-    joinDate: '2023-01-20',
-    status: 'active',
-    totalSpent: 22000,
-  },
-  {
-    id: '9',
-    name: 'Ngô Thị Lan',
-    email: 'ngothilan@email.com',
-    phone: '0990123456',
-    role: 'member',
-    joinDate: '2023-07-08',
-    status: 'active',
-    totalSpent: 6000,
-  },
-  {
-    id: '10',
-    name: 'Trịnh Văn Khoa',
-    email: 'trinhvankhoa@email.com',
-    phone: '0901234567',
-    role: 'member',
-    joinDate: '2023-08-12',
-    status: 'inactive',
-    totalSpent: 500,
   },
 ])
 
@@ -191,49 +140,66 @@ const columns = [
       )
     },
   }),
-  columnHelper.accessor('joinDate', {
-    header: () => h('span', { class: 'font-semibold text-gray-900' }, 'Ngày tham gia'),
-    cell: info => {
-      const date = new Date(info.getValue()).toLocaleDateString('vi-VN')
-      return h('span', { class: 'text-sm text-gray-600' }, date)
-    },
-  }),
-  columnHelper.accessor('totalSpent', {
-    header: () => h('span', { class: 'font-semibold text-gray-900' }, 'Tổng chi tiêu'),
-    cell: info =>
-      h(
-        'span',
-        { class: 'text-sm font-semibold text-gray-900' },
-        `$${info.getValue().toLocaleString()}`
-      ),
-  }),
-  columnHelper.accessor('status', {
-    header: () => h('span', { class: 'font-semibold text-gray-900' }, 'Trạng thái'),
-    cell: info => {
-      const status = info.getValue()
-      return h('div', { class: 'flex items-center gap-2' }, [
-        h('div', {
-          class: `h-2 w-2 rounded-full ${status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`,
-        }),
-        h('span', { class: 'text-sm text-gray-600' }, status === 'active' ? 'Hoạt động' : 'Ngừng'),
-      ])
-    },
-  }),
   columnHelper.display({
     id: 'actions',
-    header: () => h('span'),
-    cell: () =>
-      h(
-        'button',
-        {
-          class:
-            'inline-flex items-center justify-center rounded-lg p-2 transition-colors hover:bg-gray-100',
-          title: 'Tùy chọn',
-        },
-        [h(MoreHorizontal, { class: 'h-5 w-5 text-gray-400' })]
-      ),
+    header: () => h('span', { class: 'sr-only' }, 'Thao tác'),
+    cell: info => {
+      const member = info.row.original
+      return h(DropdownMenu, null, {
+        default: () => [
+          h(
+            DropdownMenuTrigger,
+            { asChild: true },
+            {
+              default: () =>
+                h(
+                  Button,
+                  {
+                    variant: 'ghost',
+                    size: 'icon',
+                    class:
+                      'h-8 w-8 rounded-full hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500',
+                  },
+                  () => h(MoreHorizontal, { class: 'h-4 w-4 text-gray-500' })
+                ),
+            }
+          ),
+          h(
+            DropdownMenuContent,
+            { align: 'end' },
+            {
+              default: () => [
+                h(
+                  DropdownMenuItem,
+                  {
+                    onSelect: () => handleEdit(member),
+                  },
+                  { default: () => 'Chỉnh sửa' }
+                ),
+                h(
+                  DropdownMenuItem,
+                  {
+                    class: 'text-red-600 focus:text-red-600',
+                    onSelect: () => handleDelete(member),
+                  },
+                  { default: () => 'Xoá' }
+                ),
+              ],
+            }
+          ),
+        ],
+      })
+    },
   }),
 ]
+
+const handleEdit = (member: Member) => {
+  console.log('Chỉnh sửa thành viên', member)
+}
+
+const handleDelete = (member: Member) => {
+  console.log('Xoá thành viên', member)
+}
 
 const table = useVueTable({
   data: members.value,
@@ -288,14 +254,14 @@ const vipMembers = computed(() => members.value.filter(m => m.role === 'vip').le
         <h2 class="text-2xl font-bold text-gray-900">Quản lý thành viên</h2>
         <p class="mt-1 text-sm text-gray-600">Danh sách và quản lý tất cả thành viên</p>
       </div>
-      <Button class="gap-2">
+      <Button class="gap-2" @click="router.push({ name: 'members-create' })">
         <UserPlus class="h-4 w-4" />
         Thêm thành viên
       </Button>
     </div>
 
-    <!-- Stats & Search -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <!-- Stats -->
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div class="rounded-lg bg-blue-50 p-4">
         <div class="flex items-center gap-3">
           <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500">
@@ -318,28 +284,6 @@ const vipMembers = computed(() => members.value.filter(m => m.role === 'vip').le
             <p class="text-2xl font-bold text-green-600">{{ activeMembers }}</p>
           </div>
         </div>
-      </div>
-
-      <div class="rounded-lg bg-yellow-50 p-4">
-        <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-500">
-            <Users class="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-600">Thành viên VIP</p>
-            <p class="text-2xl font-bold text-yellow-600">{{ vipMembers }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="relative">
-        <Search class="absolute top-3.5 left-3 h-5 w-5 text-gray-400" />
-        <input
-          v-model="globalFilter"
-          type="text"
-          placeholder="Tìm kiếm theo tên, email, SĐT..."
-          class="h-full w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 text-sm focus:border-blue-500 focus:outline-none"
-        />
       </div>
     </div>
 

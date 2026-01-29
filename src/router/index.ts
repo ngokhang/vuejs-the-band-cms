@@ -17,8 +17,19 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/members',
     name: 'members',
-    component: () => import('../views/MemberView.vue'),
     meta: { layout: 'AppLayout', requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'members-list',
+        component: () => import('../views/members/MemberView.vue'),
+      },
+      {
+        path: 'create',
+        name: 'members-create',
+        component: () => import('../views/members/_components/CreateMemberForm.vue'),
+      },
+    ],
   },
   {
     path: '/settings',
