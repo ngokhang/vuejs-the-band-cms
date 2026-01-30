@@ -3,7 +3,7 @@ import { useForm } from 'vee-validate'
 import { storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
-import { watchEffect } from 'vue'
+import { watch, computed } from 'vue'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import AccountInfoSection from './AccountInfoSection.vue'
 import AuthorizeMemberSection from './AuthorizeMemberSection.vue'
 import PersonalInfoSection from './PersonalInfoSection.vue'
-import { createMemberSchema } from '@/schema/createMemberSchema'
+import { createMemberSchema, editMemberSchema } from '@/schema/createMemberSchema'
 import { useMemberStore } from '@/stores/member'
 
 type MemberFormValues = {
@@ -21,9 +21,9 @@ type MemberFormValues = {
   phoneNumber?: string
   firstName?: string
   lastName?: string
-  avatar?: File | null
+  avatar?: File | string | null
+  systemRoles?: string[]
   bandRoles?: string[]
-  userRoles?: string[]
 }
 
 const props = withDefaults(
@@ -37,10 +37,14 @@ const props = withDefaults(
   }
 )
 
+const validationSchema = computed(() =>
+  props.mode === 'edit' ? editMemberSchema : createMemberSchema
+)
+
 const form = useForm({
-  validationSchema: createMemberSchema,
+  validationSchema,
   initialValues: {
-    userRoles: [],
+    systemRoles: [],
     bandRoles: [],
   },
 })
@@ -49,39 +53,43 @@ const memberStore = useMemberStore()
 const { creating, updating } = storeToRefs(memberStore)
 const router = useRouter()
 
-console.log(props.initialValues)
-
-// Prefill cho edit: khi có initialValues thì reset form values
-watchEffect(() => {
-  if (props.initialValues && props.mode === 'edit') {
-    form.resetForm({
-      values: {
-        userRoles: [],
-        bandRoles: [],
-        ...props.initialValues,
-      } as any,
-    })
-  }
-})
+watch(
+  () => [props.mode, props.userId] as const,
+  () => {
+    if (props.initialValues && props.mode === 'edit') {
+      form.resetForm({
+        values: {
+          systemRoles: [],
+          bandRoles: [],
+          ...props.initialValues,
+        } as any,
+      })
+    }
+  },
+  { immediate: true }
+)
 
 const onSubmit = form.handleSubmit(async values => {
   try {
-    const payload = {
-      username: values.username,
-      password: values.password,
-      email: values.email,
-      phoneNumber: values.phoneNumber,
-      firstName: values.firstName,
-      lastName: values.lastName,
+    const basePayload = {
+      username: values.username!,
+      email: values.email!,
+      phoneNumber: values.phoneNumber!,
+      firstName: values.firstName!,
+      lastName: values.lastName!,
       avatar: values.avatar,
-      userRoles: values.userRoles,
-      bandRoles: values.bandRoles,
+      systemRoles: values.systemRoles!,
+      bandRoles: values.bandRoles!,
+      ...(values.avatar instanceof File && { uploadAvatar: true }),
     }
 
     const response =
       props.mode === 'edit' && props.userId
-        ? await memberStore.updateMember(props.userId, payload)
-        : await memberStore.createMember(payload)
+        ? await memberStore.updateMember(props.userId, basePayload)
+        : await memberStore.createMember({
+            ...basePayload,
+            password: values.password!,
+          })
 
     if (response?.success !== false) {
       toast.success(
@@ -115,7 +123,7 @@ const onSubmit = form.handleSubmit(async values => {
       <CardContent>
         <form @submit="onSubmit">
           <fieldset :disabled="creating || updating" class="space-y-6 disabled:opacity-60">
-            <AccountInfoSection />
+            <AccountInfoSection :password-disabled="props.mode === 'edit'" />
 
             <Separator />
 

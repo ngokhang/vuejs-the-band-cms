@@ -3,28 +3,39 @@ import { Trash2, Upload } from 'lucide-vue-next'
 import { onUnmounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { validateAvatarFile } from '@/lib/cloudinary'
+
+const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
 
 const props = defineProps<{
-  modelValue?: File | null
+  /** File khi chọn ảnh mới, string (URL) khi hiển thị avatar từ API (edit mode) */
+  modelValue?: File | string | null
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: File | null): void
+  (e: 'validationError', message: string): void
 }>()
 
 const previewUrl = ref<string | null>(null)
 const fileInputRef = ref<any>(null)
+const validationError = ref<string | null>(null)
 
 watch(
   () => props.modelValue,
-  newFile => {
-    if (previewUrl.value) {
+  newVal => {
+    if (previewUrl.value && previewUrl.value.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl.value)
-      previewUrl.value = null
     }
+    previewUrl.value = null
+    validationError.value = null
 
-    if (newFile && newFile instanceof File) {
-      previewUrl.value = URL.createObjectURL(newFile)
+    if (newVal) {
+      if (newVal instanceof File) {
+        previewUrl.value = URL.createObjectURL(newVal)
+      } else if (typeof newVal === 'string') {
+        previewUrl.value = newVal
+      }
     }
   },
   { immediate: true }
@@ -37,10 +48,17 @@ const triggerFileInput = () => {
 
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement
-  if (input.files && input.files[0]) {
-    const file = input.files[0]
-    emit('update:modelValue', file)
+  const file = input.files?.[0] ?? null
+  if (!file) return
+  const result = validateAvatarFile(file)
+  if (!result.valid) {
+    validationError.value = result.message
+    emit('validationError', result.message)
+    emit('update:modelValue', null)
+    return
   }
+  validationError.value = null
+  emit('update:modelValue', file)
 }
 
 const clearAvatar = (event: Event) => {
@@ -48,10 +66,10 @@ const clearAvatar = (event: Event) => {
 
   emit('update:modelValue', null)
 
-  if (previewUrl.value) {
+  if (previewUrl.value && previewUrl.value.startsWith('blob:')) {
     URL.revokeObjectURL(previewUrl.value)
-    previewUrl.value = null
   }
+  previewUrl.value = null
 
   if (fileInputRef.value) {
     const el = fileInputRef.value.$el ?? fileInputRef.value
@@ -62,18 +80,25 @@ const clearAvatar = (event: Event) => {
 }
 
 onUnmounted(() => {
-  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  if (previewUrl.value?.startsWith('blob:')) URL.revokeObjectURL(previewUrl.value)
 })
 </script>
 
 <template>
-  <div class="flex justify-center">
+  <div class="flex flex-col items-center justify-center">
     <div
       class="group hover:border-primary/50 relative flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 transition hover:bg-slate-100"
       @click="triggerFileInput"
     >
       <template v-if="previewUrl">
         <img :src="previewUrl" class="h-full w-full object-cover" alt="Avatar Preview" />
+
+        <div
+          class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity group-hover:opacity-100"
+          aria-hidden
+        >
+          <span class="text-xs font-medium text-white drop-shadow-sm">Thay ảnh</span>
+        </div>
 
         <Button
           type="button"
@@ -97,10 +122,13 @@ onUnmounted(() => {
       <Input
         ref="fileInputRef"
         type="file"
-        accept="image/*"
+        :accept="ACCEPT"
         class="hidden"
         @change="handleFileChange"
       />
     </div>
+    <p v-if="validationError" class="text-destructive mt-1 text-center text-xs">
+      {{ validationError }}
+    </p>
   </div>
 </template>

@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+
+withDefaults(
+  defineProps<{
+    /** Ở chế độ edit: password disabled, không required */
+    passwordDisabled?: boolean
+  }>(),
+  { passwordDisabled: false }
+)
 </script>
 
 <template>
@@ -31,9 +39,17 @@ import { Input } from '@/components/ui/input'
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <FormField v-slot="{ componentField }" name="password">
         <FormItem>
-          <FormLabel>Mật khẩu <span class="text-red-500">*</span></FormLabel>
+          <FormLabel>
+            Mật khẩu
+            <span v-if="!passwordDisabled" class="text-red-500">*</span>
+          </FormLabel>
           <FormControl>
-            <Input type="password" placeholder="********" v-bind="componentField" />
+            <Input
+              type="password"
+              placeholder="********"
+              :disabled="passwordDisabled"
+              v-bind="componentField"
+            />
           </FormControl>
           <FormMessage />
         </FormItem>

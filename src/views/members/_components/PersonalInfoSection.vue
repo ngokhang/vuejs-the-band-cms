@@ -15,7 +15,7 @@ import AvatarUpload from '@/components/common/AvatarUpload.vue'
             <FormLabel>Avatar</FormLabel>
             <FormControl>
               <AvatarUpload
-                :model-value="value as File | null"
+                :model-value="(value as File | string | null) ?? null"
                 @update:model-value="handleChange"
               />
             </FormControl>

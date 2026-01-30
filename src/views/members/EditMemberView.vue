@@ -32,13 +32,13 @@ onMounted(async () => {
     :user-id="userId"
     :initial-values="{
       username: currentUser.username,
-      // Không prefill password
       email: currentUser.email,
       phoneNumber: currentUser.phoneNumber,
       firstName: currentUser.firstName,
       lastName: currentUser.lastName,
-      bandRoles: currentUser.bandRoles,
-      userRoles: currentUser.systemRoles,
+      avatar: currentUser.avatar ?? null,
+      systemRoles: currentUser.systemRoles,
+      bandRoles: currentUser.bandRoles ?? [],
     }"
   />
 

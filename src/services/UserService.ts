@@ -1,5 +1,6 @@
+import type { ApiResponse } from '@/types/response'
+import type { AvatarUploadParams } from '@/lib/cloudinary'
 import { BaseService } from './BaseService'
-import axiosInstance from '@/lib/axios'
 
 export interface CreateUserPayload {
   username: string
@@ -9,10 +10,12 @@ export interface CreateUserPayload {
   firstName: string
   lastName: string
   avatar?: File | null
+  systemRoles: string[]
   bandRoles: string[]
-  userRoles: string[]
+  uploadAvatar?: boolean
 }
 
+/** API FetchOneUser trả về systemRoles + bandRoles */
 export interface User {
   id: string
   username: string
@@ -20,9 +23,15 @@ export interface User {
   phoneNumber: string
   firstName: string
   lastName: string
-  avatar?: string
-  bandRoles: string[]
+  avatar?: string | null
   systemRoles: string[]
+  bandRoles: string[]
+}
+
+/** Response data khi tạo/cập nhật user với uploadAvatar: true */
+export interface CreateOrUpdateUserData {
+  user: User
+  avatarUpload?: AvatarUploadParams
 }
 
 class UserService extends BaseService {
@@ -34,44 +43,42 @@ class UserService extends BaseService {
     return this.get<User>(`/${id}`)
   }
 
-  async createUser(payload: CreateUserPayload) {
-    // Convert FormData nếu có avatar file, otherwise send JSON
-    if (payload.avatar instanceof File) {
-      const formData = new FormData()
-      formData.append('username', payload.username)
-      formData.append('password', payload.password)
-      formData.append('email', payload.email)
-      formData.append('phoneNumber', payload.phoneNumber)
-      formData.append('firstName', payload.firstName)
-      formData.append('lastName', payload.lastName)
-      formData.append('bandRoles', JSON.stringify(payload.bandRoles))
-      formData.append('systemRoles', JSON.stringify(payload.userRoles))
-      formData.append('avatar', payload.avatar)
-
-      // Gửi FormData trực tiếp qua axiosInstance
-      const response = await axiosInstance.post(`${this.BaseURL}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
-      return response.data
-    }
-
-    // Send JSON payload without avatar
+  /**
+   * Tạo user (JSON). Gửi uploadAvatar: true khi có avatar file để nhận avatarUpload.
+   * File avatar không gửi trong request này – upload lên Cloudinary bằng avatarUpload, rồi PUT avatar URL.
+   */
+  async createUser(payload: CreateUserPayload): Promise<ApiResponse<CreateOrUpdateUserData>> {
     const { avatar, ...jsonPayload } = payload
-    return this.post<User>('/', jsonPayload as Record<string, unknown>)
+    const body: Record<string, unknown> = {
+      ...jsonPayload,
+      uploadAvatar: payload.avatar instanceof File,
+    }
+    return this.post<CreateOrUpdateUserData>('/', body)
   }
 
+  /**
+   * Cập nhật user (JSON). Gửi uploadAvatar: true khi có avatar file để nhận avatarUpload.
+   * File avatar không gửi ở đây – upload lên Cloudinary rồi PUT { avatar: secure_url }.
+   */
+  /** Payload có thể chỉ gồm avatar (URL) khi chỉ cập nhật avatar sau upload Cloudinary */
   async updateUser(
     id: string,
-    payload: Omit<CreateUserPayload, 'username' | 'password'> & {
+    payload: Partial<Omit<CreateUserPayload, 'username' | 'password' | 'avatar'>> & {
       username?: string
       password?: string
+      /** URL sau khi upload lên Cloudinary hoặc File khi chọn ảnh mới (gửi uploadAvatar: true) */
+      avatar?: string | File | null
     }
-  ) {
-    // Hiện tại xử lý JSON; nếu cần update avatar dạng file có thể mở rộng sau
-    const { avatar, ...jsonPayload } = payload
-    return this.put<User>(`/${id}`, jsonPayload as Record<string, unknown>)
+  ): Promise<ApiResponse<CreateOrUpdateUserData>> {
+    const { avatar, ...rest } = payload
+    const body: Record<string, unknown> = {
+      ...rest,
+      uploadAvatar: payload.avatar instanceof File,
+    }
+    if (typeof avatar === 'string') {
+      body.avatar = avatar
+    }
+    return this.put<CreateOrUpdateUserData>(`/${id}`, body)
   }
 }
 
