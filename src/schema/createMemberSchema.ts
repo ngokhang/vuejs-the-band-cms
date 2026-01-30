@@ -13,10 +13,22 @@ const baseMemberFields = {
   avatar: z
     .any()
     .optional()
-    .refine(file => !file || file instanceof File, 'Vui lòng chọn ảnh đại diện hợp lệ')
-    .refine(file => !file || file?.size <= 5000000, 'Kích thước ảnh tối đa 5MB')
     .refine(
-      file => !file || ['image/jpeg', 'image/png', 'image/webp'].includes(file?.type),
+      val =>
+        val == null ||
+        val instanceof File ||
+        (typeof val === 'string' && val.length > 0),
+      'Vui lòng chọn ảnh đại diện hợp lệ'
+    )
+    .refine(
+      val => !val || !(val instanceof File) || val.size <= 5000000,
+      'Kích thước ảnh tối đa 5MB'
+    )
+    .refine(
+      val =>
+        !val ||
+        !(val instanceof File) ||
+        ['image/jpeg', 'image/png', 'image/webp'].includes(val.type),
       'Chỉ chấp nhận định dạng .jpg, .png, .webp'
     ),
   systemRoles: z.array(z.string()).min(1, { message: 'Chọn ít nhất 1 vai trò hệ thống' }),
