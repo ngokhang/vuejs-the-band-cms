@@ -10,6 +10,17 @@ export interface AvatarUploadParams {
   folder: string
   cloudName: string
   apiKey: string
+  public_id?: string
+}
+
+export function buildAvatarPublicId(name: string, timestamp: number): string {
+  const sanitized = name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_-]/g, '')
+  const base = sanitized || 'avatar'
+  return `${base}_avatar_${timestamp}`
 }
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
@@ -42,6 +53,9 @@ export async function uploadAvatarToCloudinary(
   formData.append('timestamp', String(params.timestamp))
   formData.append('signature', params.signature)
   formData.append('folder', params.folder)
+  if (params.public_id) {
+    formData.append('public_id', params.public_id)
+  }
 
   const response = await fetch(params.uploadUrl, {
     method: 'POST',
