@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router'
 import AppLayout from './layouts/AppLayout.vue'
 import AuthLayout from './layouts/AuthLayout.vue'
 import { computed } from 'vue'
-import { Toaster } from 'vue-sonner'
+import { Toaster } from '@/components/ui/sonner'
 import ErrorLayout from './layouts/ErrorLayout.vue'
 
 const route = useRoute()
@@ -13,9 +13,8 @@ const LayoutComponent = computed(() => layouts[route.meta.layout] || AppLayout)
 
 <template>
   <component :is="LayoutComponent">
-    <router-view />
+    <Toaster position="top-right" :rich-colors="true" /><router-view />
   </component>
-  <Toaster />
 </template>
 
 <style scoped></style>

@@ -29,6 +29,11 @@ const routes: RouteRecordRaw[] = [
         name: 'members-create',
         component: () => import('../views/members/_components/CreateMemberForm.vue'),
       },
+      {
+        path: ':id/edit',
+        name: 'members-edit',
+        component: () => import('../views/members/EditMemberView.vue'),
+      },
     ],
   },
   {

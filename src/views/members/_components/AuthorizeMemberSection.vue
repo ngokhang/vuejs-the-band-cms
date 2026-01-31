@@ -5,10 +5,10 @@ import { bandRolesList, systemRolesList } from '@/types/constants'
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-1">
     <h3 class="text-lg font-medium">Phân quyền & Vai trò</h3>
 
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <FormField v-slot="{ value, handleChange }" name="systemRoles">
         <FormItem class="flex flex-col">
           <FormLabel>Vai trò hệ thống <span class="text-red-500">*</span></FormLabel>
