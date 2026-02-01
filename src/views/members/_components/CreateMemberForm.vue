@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate'
-import { storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
 import { watch, computed } from 'vue'
@@ -12,7 +11,7 @@ import AccountInfoSection from './AccountInfoSection.vue'
 import AuthorizeMemberSection from './AuthorizeMemberSection.vue'
 import PersonalInfoSection from './PersonalInfoSection.vue'
 import { createMemberSchema, editMemberSchema } from '@/schema/createMemberSchema'
-import { useMemberStore } from '@/stores/member'
+import { useMemberMutations } from '@/composables/members/useMemberMutations'
 
 type MemberFormValues = {
   username?: string
@@ -49,9 +48,12 @@ const form = useForm({
   },
 })
 
-const memberStore = useMemberStore()
-const { creating, updating } = storeToRefs(memberStore)
 const router = useRouter()
+const { createMemberMutation, updateMemberMutation } = useMemberMutations()
+
+const isPending = computed(
+  () => createMemberMutation.isPending.value || updateMemberMutation.isPending.value
+)
 
 watch(
   () => [props.mode, props.userId] as const,
@@ -83,30 +85,34 @@ const onSubmit = form.handleSubmit(async values => {
       ...(values.avatar instanceof File && { uploadAvatar: true }),
     }
 
-    const response =
-      props.mode === 'edit' && props.userId
-        ? await memberStore.updateMember(props.userId, basePayload)
-        : await memberStore.createMember({
-            ...basePayload,
-            password: values.password!,
-          })
-
-    if (response?.success !== false) {
-      toast.success(
-        props.mode === 'edit' ? 'Cập nhật thành viên thành công!' : 'Tạo thành viên thành công!'
-      )
-      await router.push({ name: 'members-list' })
+    if (props.mode === 'edit' && props.userId) {
+      const response = await updateMemberMutation.mutateAsync({
+        id: props.userId,
+        payload: basePayload,
+      })
+      if (response?.success !== false) {
+        toast.success('Cập nhật thành viên thành công!')
+        await router.push({ name: 'members-list' })
+      } else {
+        toast.error(response?.message || 'Cập nhật thành viên không thành công!')
+      }
     } else {
-      toast.error(
-        response?.message ||
-          (props.mode === 'edit'
-            ? 'Cập nhật thành viên không thành công!'
-            : 'Tạo thành viên không thành công!')
-      )
+      const response = await createMemberMutation.mutateAsync({
+        ...basePayload,
+        password: values.password!,
+      })
+      if (response?.success !== false) {
+        toast.success('Tạo thành viên thành công!')
+        await router.push({ name: 'members-list' })
+      } else {
+        toast.error(
+          response?.message || 'Tạo thành viên không thành công!'
+        )
+      }
     }
-  } catch (error: any) {
-    const errorMessage = error?.message || 'Đã xảy ra lỗi khi tạo thành viên'
-    toast.error(errorMessage)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Đã xảy ra lỗi'
+    toast.error(message)
   }
 })
 </script>
@@ -122,7 +128,7 @@ const onSubmit = form.handleSubmit(async values => {
 
       <CardContent>
         <form @submit="onSubmit">
-          <fieldset :disabled="creating || updating" class="space-y-6 disabled:opacity-60">
+          <fieldset :disabled="isPending" class="space-y-6 disabled:opacity-60">
             <AccountInfoSection :password-disabled="props.mode === 'edit'" />
 
             <Separator />
@@ -134,8 +140,8 @@ const onSubmit = form.handleSubmit(async values => {
             <AuthorizeMemberSection />
 
             <div class="flex justify-end pt-4">
-              <Button type="submit" size="lg" :disabled="creating || updating">
-                <span v-if="creating || updating">Đang xử lý...</span>
+              <Button type="submit" size="lg" :disabled="isPending">
+                <span v-if="isPending">Đang xử lý...</span>
                 <span v-else>{{ props.mode === 'edit' ? 'Lưu thay đổi' : 'Tạo thành viên' }}</span>
               </Button>
             </div>

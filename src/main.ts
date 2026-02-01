@@ -1,3 +1,4 @@
+import { VueQueryPlugin } from '@tanstack/vue-query'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
@@ -14,6 +15,16 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
+app.use(VueQueryPlugin, {
+  queryClientConfig: {
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // 1 minute
+        gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
+      },
+    },
+  },
+})
 
 // Inject hàm điều hướng cho axios để có thể redirect khi session hết hạn
 setNavigate((path: string) => {

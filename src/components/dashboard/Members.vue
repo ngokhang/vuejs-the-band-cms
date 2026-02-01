@@ -1,140 +1,47 @@
 <script setup lang="ts">
 import DataTable from '@/components/common/DataTable.vue'
 import { Button } from '@/components/ui/button'
+import { useMembersQuery } from '@/composables/members/useMembersQuery'
+import { useMemberStore } from '@/stores/member'
 import MemberFilter from '@/views/members/_components/MemberFilter.vue'
 import MemberStats from '@/views/members/_components/MemberStats.vue'
 import MemberTableEmptyState from '@/views/members/_components/MemberTableEmptyState.vue'
 import MemberTablePagination from '@/views/members/_components/MemberTablePagination.vue'
-import { useMemberColumns, type Member } from '@/views/members/_components/useMemberColumns'
+import { useMemberColumns } from '@/views/members/_components/useMemberColumns'
+import type { User } from '@/types/user'
 import type { SortingState } from '@tanstack/vue-table'
-import {
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useVueTable,
-} from '@tanstack/vue-table'
+import { getCoreRowModel, getSortedRowModel, useVueTable } from '@tanstack/vue-table'
 import { UserPlus } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const memberStore = useMemberStore()
+const { pagination } = storeToRefs(memberStore)
+const { setPagination } = memberStore
 
-const members = ref<Member[]>([
-  {
-    id: '1',
-    name: 'Nguyễn Văn An',
-    email: 'nguyenvanan@email.com',
-    phone: '0912345678',
-    role: 'vip',
-    joinDate: '2023-01-15',
-    status: 'active',
-    totalSpent: 15000,
-  },
-  {
-    id: '2',
-    name: 'Trần Thị Bình',
-    email: 'tranthibinh@email.com',
-    phone: '0923456789',
-    role: 'member',
-    joinDate: '2023-03-20',
-    status: 'active',
-    totalSpent: 5000,
-  },
-  {
-    id: '3',
-    name: 'Lê Hoàng Cường',
-    email: 'lehoangcuong@email.com',
-    phone: '0934567890',
-    role: 'admin',
-    joinDate: '2022-12-10',
-    status: 'active',
-    totalSpent: 25000,
-  },
-  {
-    id: '4',
-    name: 'Phạm Minh Đức',
-    email: 'phamminhduc@email.com',
-    phone: '0945678901',
-    role: 'member',
-    joinDate: '2023-05-05',
-    status: 'active',
-    totalSpent: 3000,
-  },
-  {
-    id: '5',
-    name: 'Hoàng Thị Em',
-    email: 'hoangthiem@email.com',
-    phone: '0956789012',
-    role: 'vip',
-    joinDate: '2023-02-28',
-    status: 'active',
-    totalSpent: 18000,
-  },
-  {
-    id: '6',
-    name: 'Vũ Đức Phong',
-    email: 'vuducphong@email.com',
-    phone: '0967890123',
-    role: 'member',
-    joinDate: '2023-06-15',
-    status: 'inactive',
-    totalSpent: 1000,
-  },
-  {
-    id: '7',
-    name: 'Đỗ Thị Giang',
-    email: 'dothigiang@email.com',
-    phone: '0978901234',
-    role: 'member',
-    joinDate: '2023-04-10',
-    status: 'active',
-    totalSpent: 4500,
-  },
-  {
-    id: '8',
-    name: 'Bùi Văn Hải',
-    email: 'buivanhai@email.com',
-    phone: '0989012345',
-    role: 'vip',
-    joinDate: '2023-01-20',
-    status: 'active',
-    totalSpent: 22000,
-  },
-  {
-    id: '9',
-    name: 'Ngô Thị Lan',
-    email: 'ngothilan@email.com',
-    phone: '0990123456',
-    role: 'member',
-    joinDate: '2023-07-08',
-    status: 'active',
-    totalSpent: 6000,
-  },
-  {
-    id: '10',
-    name: 'Trịnh Văn Khoa',
-    email: 'trinhvankhoa@email.com',
-    phone: '0901234567',
-    role: 'member',
-    joinDate: '2023-08-12',
-    status: 'inactive',
-    totalSpent: 500,
-  },
-])
+const { data: members, meta, isLoading, isError, error } = useMembersQuery()
 
 const sorting = ref<SortingState>([])
-const globalFilter = ref('')
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 5,
+
+const filterQuery = computed({
+  get: () => pagination.value.q ?? '',
+  set: (value: string) => {
+    setPagination({
+      page: 1,
+      pageSize: pagination.value.pageSize,
+      q: value || null,
+      sortBy: pagination.value.sortBy ?? undefined,
+    })
+  },
 })
 
-const handleEdit = (member: Member) => {
+const handleEdit = (member: User) => {
   router.push({ name: 'members-edit', params: { id: member.id } })
 }
 
-const handleDelete = (member: Member) => {
+const handleDelete = (member: User) => {
   console.log('Xoá thành viên', member)
 }
 
@@ -144,54 +51,28 @@ const columns = useMemberColumns({
 })
 
 const table = useVueTable({
-  data: members.value,
+  data: members,
   columns,
   state: {
     get sorting() {
       return sorting.value
-    },
-    get globalFilter() {
-      return globalFilter.value
-    },
-    get pagination() {
-      return pagination.value
     },
   },
   onSortingChange: updaterOrValue => {
     sorting.value =
       typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue
   },
-  onGlobalFilterChange: updater => {
-    globalFilter.value = typeof updater === 'function' ? updater(globalFilter.value) : updater
-  },
-  onPaginationChange: updater => {
-    pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater
-  },
   getCoreRowModel: getCoreRowModel(),
   getSortedRowModel: getSortedRowModel(),
-  getFilteredRowModel: getFilteredRowModel(),
-  getPaginationRowModel: getPaginationRowModel(),
-  initialState: {
-    pagination: {
-      pageSize: 5,
-    },
-  },
-  globalFilterFn: (row, _columnId, filterValue) => {
-    const name = row.original.name.toLowerCase()
-    const email = row.original.email.toLowerCase()
-    const phone = row.original.phone
-    const filter = filterValue.toLowerCase()
-    return name.includes(filter) || email.includes(filter) || phone.includes(filter)
-  },
 })
 
 const filteredRows = computed(() => table.getRowModel().rows)
-const pageCount = computed(() => table.getPageCount())
-const currentPage = computed(() => table.getState().pagination.pageIndex + 1)
+const pageCount = computed(() => meta.value?.totalPages ?? 1)
+const currentPage = computed(() => pagination.value.page)
+const totalFromMeta = computed(() => meta.value?.total ?? 0)
 
-const totalMembers = computed(() => members.value.length)
-const activeMembers = computed(() => members.value.filter(m => m.status === 'active').length)
-const vipMembers = computed(() => members.value.filter(m => m.role === 'vip').length)
+const totalMembers = computed(() => totalFromMeta.value)
+const activeMembers = computed(() => totalFromMeta.value)
 </script>
 
 <template>
@@ -212,10 +93,18 @@ const vipMembers = computed(() => members.value.filter(m => m.role === 'vip').le
     <MemberStats :total-members="totalMembers" :active-members="activeMembers" />
 
     <!-- Filter -->
-    <MemberFilter v-model="globalFilter" />
+    <MemberFilter v-model="filterQuery" />
+
+    <!-- Loading / Error -->
+    <div v-if="isLoading" class="py-12 text-center text-sm text-gray-500">
+      Đang tải danh sách thành viên...
+    </div>
+    <div v-else-if="isError" class="py-12 text-center text-sm text-red-600">
+      {{ error?.message ?? 'Đã xảy ra lỗi khi tải danh sách thành viên' }}
+    </div>
 
     <!-- Table -->
-    <DataTable :table="table">
+    <DataTable v-else :table="table">
       <template #emptyState>
         <MemberTableEmptyState :is-empty="filteredRows.length === 0" />
       </template>
@@ -223,8 +112,8 @@ const vipMembers = computed(() => members.value.filter(m => m.role === 'vip').le
         <MemberTablePagination
           :page-count="pageCount"
           :current-page="currentPage"
-          :total="table.getFilteredRowModel().rows.length"
-          @update:page="(page: number) => table.setPageIndex(page - 1)"
+          :total="totalFromMeta"
+          @update:page="(page: number) => setPagination({ ...pagination, page })"
         />
       </template>
     </DataTable>

@@ -1,30 +1,30 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'
 
 import LoadingBlock from '@/components/common/LoadingBlock.vue'
 import CreateMemberForm from '@/views/members/_components/CreateMemberForm.vue'
-import { useMemberStore } from '@/stores/member'
+import { useMemberQuery } from '@/composables/members/useMemberQuery'
 
 const route = useRoute()
-const memberStore = useMemberStore()
-const { fetching, currentUser } = storeToRefs(memberStore)
-
 const userId = computed(() => String(route.params.id || ''))
 
-onMounted(async () => {
-  try {
-    await memberStore.fetchMemberById(userId.value)
-  } catch (e: any) {
-    toast.error(e?.message || 'Không thể tải thông tin thành viên')
+const { data: currentUser, isLoading, isError, error } = useMemberQuery(userId)
+
+watch(isError, (failed) => {
+  if (failed && error.value) {
+    const msg =
+      error.value instanceof Error
+        ? error.value.message
+        : 'Không thể tải thông tin thành viên'
+    toast.error(msg)
   }
 })
 </script>
 
 <template>
-  <LoadingBlock v-if="fetching" label="Đang tải thông tin thành viên..." />
+  <LoadingBlock v-if="isLoading" label="Đang tải thông tin thành viên..." />
 
   <CreateMemberForm
     v-else-if="currentUser"

@@ -3,16 +3,9 @@
  * dùng signed params (avatarUpload) từ backend.
  */
 
-export interface AvatarUploadParams {
-  uploadUrl: string
-  timestamp: number
-  signature: string
-  folder: string
-  cloudName: string
-  apiKey: string
-  public_id?: string
-}
+import type { AvatarUploadParams } from '@/types/cloudinary'
 
+export type { AvatarUploadParams }
 export function buildAvatarPublicId(name: string, timestamp: number): string {
   const sanitized = name
     .trim()
