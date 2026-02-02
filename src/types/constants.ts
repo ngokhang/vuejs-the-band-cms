@@ -4,6 +4,7 @@ export type AppRouteName =
   | 'members'
   | 'members-list'
   | 'members-create'
+  | 'customers'
   | 'settings'
   | 'login'
   | 'test'
@@ -20,6 +21,7 @@ export const BREADCRUMB_ROUTES: Record<AppRouteName, BreadcrumbRouteConfig> = {
   members: { path: '/members', label: 'Thành viên' },
   'members-list': { path: '/members', label: 'Danh sách thành viên' },
   'members-create': { path: '/members/create', label: 'Tạo thành viên' },
+  customers: { path: '/customers', label: 'Khách hàng' },
   settings: { path: '/settings', label: 'Cài đặt' },
   login: { path: '/login', label: 'Đăng nhập' },
   test: { path: '/test', label: 'Trang test' },

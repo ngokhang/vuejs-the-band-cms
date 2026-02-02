@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { LayoutDashboard, Users, CalendarDays, Image, Settings, LogOut } from 'lucide-vue-next'
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  Image,
+  Settings,
+  LogOut,
+  UserCircle2,
+} from 'lucide-vue-next'
 import { RouterLink, useRouter } from 'vue-router'
 import {
   Sidebar,
@@ -24,6 +32,11 @@ const mainMenuItems = [
     label: 'Thành viên',
     icon: Users,
     to: { path: '/members' },
+  },
+  {
+    label: 'Khách hàng',
+    icon: UserCircle2,
+    to: { path: '/customers' },
   },
   {
     label: 'Lịch diễn',
