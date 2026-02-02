@@ -3,7 +3,7 @@ import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import LoadingBlock from '@/components/common/LoadingBlock.vue'
+import CreateMemberFormSkeleton from '@/components/common/CreateMemberFormSkeleton.vue'
 import CreateMemberForm from '@/views/members/_components/CreateMemberForm.vue'
 import { useMemberQuery } from '@/composables/members/useMemberQuery'
 
@@ -12,19 +12,17 @@ const userId = computed(() => String(route.params.id || ''))
 
 const { data: currentUser, isLoading, isError, error } = useMemberQuery(userId)
 
-watch(isError, (failed) => {
+watch(isError, failed => {
   if (failed && error.value) {
     const msg =
-      error.value instanceof Error
-        ? error.value.message
-        : 'Không thể tải thông tin thành viên'
+      error.value instanceof Error ? error.value.message : 'Không thể tải thông tin thành viên'
     toast.error(msg)
   }
 })
 </script>
 
 <template>
-  <LoadingBlock v-if="isLoading" label="Đang tải thông tin thành viên..." />
+  <CreateMemberFormSkeleton v-if="isLoading" />
 
   <CreateMemberForm
     v-else-if="currentUser"

@@ -1,17 +1,24 @@
 <script setup lang="ts">
 import type { Table } from '@tanstack/vue-table'
 import FlexRender from '@/components/ui/FlexRender.vue'
+import { computed } from 'vue'
 
 interface Props {
   table: Table<any>
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 defineSlots<{
   emptyState?: () => any
   pagination?: () => any
 }>()
+
+const rows = computed(() => props.table.getRowModel().rows)
+const headerCount = computed(
+  () => props.table.getHeaderGroups()[0]?.headers?.length ?? 0
+)
+const isEmpty = computed(() => rows.value.length === 0)
 </script>
 
 <template>
@@ -34,8 +41,16 @@ defineSlots<{
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
+          <template v-if="isEmpty">
+            <tr>
+              <td :colspan="headerCount" class="p-0 align-top">
+                <slot name="emptyState" />
+              </td>
+            </tr>
+          </template>
           <tr
-            v-for="row in table.getRowModel().rows"
+            v-else
+            v-for="row in rows"
             :key="row.id"
             class="transition-colors hover:bg-gray-50"
           >
@@ -46,9 +61,6 @@ defineSlots<{
         </tbody>
       </table>
     </div>
-
-    <!-- Empty State Slot -->
-    <slot name="emptyState" />
 
     <!-- Pagination Slot -->
     <slot name="pagination" />

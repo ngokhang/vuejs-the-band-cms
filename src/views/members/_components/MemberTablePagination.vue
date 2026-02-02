@@ -12,6 +12,7 @@ interface Props {
   pageCount: number
   currentPage: number
   total: number
+  pageSize: number
 }
 
 const props = defineProps<Props>()
@@ -23,6 +24,9 @@ const emit = defineEmits<{
 const handlePageChange = (page: number) => {
   emit('update:page', page)
 }
+
+console.log('>>> total', props.total)
+console.log('>>> pageSize', props.pageSize)
 </script>
 
 <template>
@@ -32,7 +36,7 @@ const handlePageChange = (page: number) => {
         <Pagination
           v-if="pageCount > 1"
           :total="total"
-          :items-per-page="5"
+          :items-per-page="pageSize"
           :sibling-count="1"
           :page="currentPage"
           @update:page="handlePageChange"
@@ -43,16 +47,12 @@ const handlePageChange = (page: number) => {
               <span class="hidden sm:block">Trước</span>
             </PaginationPrevious>
             <template
-              v-for="(item, index) in items"
+              v-for="(item, index) in pageCount"
               :key="index"
               :data-pagination-value="item.value"
             >
-              <PaginationItem
-                v-if="item.type === 'page'"
-                :value="item.value"
-                :is-active="item.value === currentPage"
-              >
-                {{ item.value }}
+              <PaginationItem :value="item" :is-active="item === currentPage">
+                {{ item }}
               </PaginationItem>
             </template>
             <!-- <PaginationEllipsis :index="4" /> -->

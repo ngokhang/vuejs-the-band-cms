@@ -15,7 +15,7 @@ export function useMembersQuery() {
     memberKeys.list({
       page: pagination.value.page,
       pageSize: pagination.value.pageSize,
-      q: pagination.value.q ?? undefined,
+      query: pagination.value.query ?? undefined,
       sortBy: pagination.value.sortBy ?? undefined,
     })
   )
@@ -25,6 +25,9 @@ export function useMembersQuery() {
     queryFn: async (): Promise<ApiResponse<User[]>> => {
       return userService.getUserWithPagination(pagination.value)
     },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   })
 
   const data = computed(() => query.data.value?.data ?? [])

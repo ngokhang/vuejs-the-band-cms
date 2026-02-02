@@ -5,8 +5,8 @@ import type { MemberListParams } from '@/types/member'
 const defaultPagination: MemberListParams = {
   page: 1,
   pageSize: 10,
-  q: null,
-  sortBy: null,
+  query: '',
+  sortBy: 'ASC',
 }
 
 export const useMemberStore = defineStore('member', () => {
@@ -16,7 +16,7 @@ export const useMemberStore = defineStore('member', () => {
     pagination.value = {
       page: paginationArgs.page,
       pageSize: paginationArgs.pageSize,
-      q: paginationArgs.q,
+      query: paginationArgs.query,
       sortBy: paginationArgs.sortBy,
     }
   }

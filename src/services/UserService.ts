@@ -42,8 +42,8 @@ class UserService extends BaseService {
   }
 
   async getUserWithPagination(params: MemberListParams): Promise<ApiResponse<User[]>> {
-    const { page, pageSize, q, sortBy } = params
-    return this.get<ApiResponse<User[]>>('/', { page, pageSize, q, sortBy })
+    const { page, pageSize, query, sortBy } = params
+    return this.get<ApiResponse<User[]>>('/', { page, pageSize, query, sortBy })
   }
 }
 
