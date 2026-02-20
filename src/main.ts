@@ -26,6 +26,8 @@ app.use(VueQueryPlugin, {
   },
 })
 
+const authStore = useAuthStore()
+
 // Inject hàm điều hướng cho axios để có thể redirect khi session hết hạn
 setNavigate((path: string) => {
   router.push(path)
@@ -33,8 +35,16 @@ setNavigate((path: string) => {
 
 // Inject hàm clear auth để clear user khi session hết hạn
 setClearAuth(() => {
-  const authStore = useAuthStore()
   authStore.setUser(null)
 })
+
+await router.isReady()
+// ✅ Chỉ bootstrap nếu KHÔNG ở trang login
+const currentRoute = router.currentRoute.value
+const isLoginPage = currentRoute.name === 'login' || currentRoute.path === '/login'
+
+if (!isLoginPage) {
+  await authStore.bootstrap()
+}
 
 app.mount('#app')
